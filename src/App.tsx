@@ -22,7 +22,9 @@ import {
   Smile,
   Meh,
   Box,
-  Palette
+  Palette,
+  Settings,
+  X
 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { clsx, type ClassValue } from 'clsx';
@@ -74,6 +76,13 @@ export default function App() {
   const [selectedLang, setSelectedLang] = useState<LangId>('ko');
   const [imageStyle, setImageStyle] = useState<'3d' | 'cartoon'>('3d');
   const [imageExpression, setImageExpression] = useState<'happy' | 'serious'>('happy');
+  const [userApiKey, setUserApiKey] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('nano_banana_api_key') || '';
+    }
+    return '';
+  });
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const resultRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -164,12 +173,19 @@ export default function App() {
   const generateNotice = async () => {
     if (!inputText.trim()) return;
     
+    const activeKey = userApiKey || API_KEY;
+    if (!activeKey) {
+      setError('API 키가 설정되지 않았습니다. 우측 상단 설정(⚙️) 아이콘을 눌러 API 키를 입력해 주세요.');
+      setIsSettingsOpen(true);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setResult(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: API_KEY });
+      const ai = new GoogleGenAI({ apiKey: activeKey });
       
       // 1. Generate Text and Image Prompt
       const textResponse = await ai.models.generateContent({
@@ -304,8 +320,67 @@ export default function App() {
     }
   };
 
+  const saveApiKey = (key: string) => {
+    setUserApiKey(key);
+    localStorage.setItem('nano_banana_api_key', key);
+    setIsSettingsOpen(false);
+    if (key) setError(null);
+  };
+
   return (
     <div className="min-h-screen bg-[#FDFCF8] text-[#2D2D2D] font-sans selection:bg-yellow-200">
+      {/* Settings Modal */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-8 space-y-6 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-stone-800 flex items-center gap-2">
+                <Settings className="w-5 h-5 text-yellow-500" />
+                API 설정
+              </h3>
+              <button 
+                onClick={() => setIsSettingsOpen(false)}
+                className="p-2 hover:bg-stone-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-stone-400" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-bold text-stone-600">Gemini API Key</label>
+                <input 
+                  type="password"
+                  value={userApiKey}
+                  onChange={(e) => setUserApiKey(e.target.value)}
+                  placeholder="AI Studio에서 발급받은 키를 입력하세요"
+                  className="w-full p-4 bg-stone-50 border border-stone-200 rounded-2xl focus:ring-4 focus:ring-yellow-400/20 focus:border-yellow-400 outline-none transition-all"
+                />
+                <p className="text-xs text-stone-400 leading-relaxed">
+                  * 입력하신 키는 브라우저(LocalStorage)에만 저장되며 외부로 유출되지 않습니다.<br/>
+                  * <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noreferrer" className="text-yellow-600 underline">여기</a>에서 무료 API 키를 발급받으실 수 있습니다.
+                </p>
+              </div>
+
+              {API_KEY && (
+                <div className="p-4 bg-green-50 border border-green-100 rounded-2xl">
+                  <p className="text-xs text-green-700 font-medium">
+                    ✅ 시스템 환경 변수에 API 키가 이미 설정되어 있습니다. 별도로 입력하지 않아도 작동합니다.
+                  </p>
+                </div>
+              )}
+
+              <button
+                onClick={() => saveApiKey(userApiKey)}
+                className="w-full py-4 bg-stone-900 text-white rounded-2xl font-bold hover:bg-stone-800 transition-all active:scale-95"
+              >
+                설정 저장하기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-stone-200">
         <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -317,8 +392,17 @@ export default function App() {
               나노바나나 <span className="text-yellow-600 font-medium">통신</span>
             </h1>
           </div>
-          <div className="text-xs font-mono text-stone-400 uppercase tracking-widest">
-            v1.1.0
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsSettingsOpen(true)}
+              className="p-2 rounded-xl text-stone-400 hover:text-yellow-600 hover:bg-yellow-50 transition-all"
+              title="API 설정"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+            <div className="hidden sm:block text-xs font-mono text-stone-400 uppercase tracking-widest">
+              v1.1.0
+            </div>
           </div>
         </div>
       </header>
