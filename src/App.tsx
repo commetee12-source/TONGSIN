@@ -591,91 +591,73 @@ export default function App() {
 
         {/* Result Section */}
         {result && (
-          <div ref={resultRef} className="space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-              {/* Text Output */}
-              <div className="lg:col-span-3 space-y-4">
-                <div className="flex flex-col space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold text-stone-800 flex items-center gap-2">
-                      <FileText className="w-5 h-5 text-yellow-500" />
-                      생성된 가정통신문
-                    </h3>
+          <div ref={resultRef} className="max-w-3xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+            <div className="space-y-6">
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-stone-800 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-yellow-500" />
+                    생성된 가정통신문
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    {result.imageUrl && (
+                      <button
+                        onClick={downloadImage}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors"
+                        title="이미지 다운로드"
+                      >
+                        <Download className="w-4 h-4" />
+                        이미지 저장
+                      </button>
+                    )}
                     <button
                       onClick={copyToClipboard}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-yellow-400 text-stone-900 hover:bg-yellow-500 transition-colors shadow-sm"
                     >
-                      {isCopied ? <Check className="w-4 h-4 text-green-600" /> : <Copy className="w-4 h-4" />}
-                      {isCopied ? '복사됨' : '복사하기'}
+                      {isCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {isCopied ? '복사됨' : '내용 복사'}
                     </button>
                   </div>
-
-                  {/* Language Tabs */}
-                  <div className="flex flex-wrap gap-2 p-1 bg-stone-100 rounded-2xl">
-                    {LANGUAGES.map((lang) => (
-                      <button
-                        key={lang.id}
-                        onClick={() => setSelectedLang(lang.id)}
-                        className={cn(
-                          "flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-sm font-bold transition-all",
-                          selectedLang === lang.id
-                            ? "bg-white text-stone-900 shadow-sm"
-                            : "text-stone-500 hover:text-stone-700 hover:bg-white/50"
-                        )}
-                      >
-                        <span>{lang.flag}</span>
-                        <span className="hidden sm:inline">{lang.name}</span>
-                      </button>
-                    ))}
-                  </div>
                 </div>
-                
-                <div className="bg-white border border-stone-200 rounded-3xl p-8 shadow-sm prose prose-stone max-w-none min-h-[400px]">
+
+                {/* Language Tabs */}
+                <div className="flex flex-wrap gap-2 p-1 bg-stone-100 rounded-2xl">
+                  {LANGUAGES.map((lang) => (
+                    <button
+                      key={lang.id}
+                      onClick={() => setSelectedLang(lang.id)}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-bold transition-all",
+                        selectedLang === lang.id
+                          ? "bg-white text-stone-900 shadow-sm"
+                          : "text-stone-500 hover:text-stone-700 hover:bg-white/50"
+                      )}
+                    >
+                      <span>{lang.flag}</span>
+                      <span className="hidden sm:inline">{lang.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="bg-white border border-stone-200 rounded-[2rem] shadow-xl overflow-hidden">
+                {/* Integrated Illustration */}
+                {result.imageUrl && (
+                  <div className="w-full aspect-[16/9] overflow-hidden border-b border-stone-100 group relative">
+                    <img 
+                      src={result.imageUrl} 
+                      alt="Notice Illustration" 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-white via-transparent to-transparent opacity-60" />
+                  </div>
+                )}
+
+                <div className="p-8 sm:p-12 prose prose-stone max-w-none">
                   <div className="markdown-body">
                     <Markdown>{result.notices[selectedLang]}</Markdown>
                   </div>
-                </div>
-              </div>
-
-              {/* Image Output */}
-              <div className="lg:col-span-2 space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold text-stone-800 flex items-center gap-2">
-                    <ImageIcon className="w-5 h-5 text-yellow-500" />
-                    맞춤형 AI 삽화
-                  </h3>
-                  {result.imageUrl && (
-                    <button
-                      onClick={downloadImage}
-                      className="p-1.5 rounded-lg bg-stone-100 text-stone-600 hover:bg-stone-200 transition-colors"
-                      title="이미지 다운로드"
-                    >
-                      <Download className="w-5 h-5" />
-                    </button>
-                  )}
-                </div>
-
-                <div className="bg-white border border-stone-200 rounded-3xl p-4 shadow-sm aspect-square flex items-center justify-center overflow-hidden group relative">
-                  {result.imageUrl ? (
-                    <img 
-                      src={result.imageUrl} 
-                      alt="Generated AI Illustration" 
-                      className="w-full h-full object-cover rounded-2xl transition-transform duration-500 group-hover:scale-105"
-                      referrerPolicy="no-referrer"
-                    />
-                  ) : (
-                    <div className="text-center space-y-2 px-6">
-                      <ImageIcon className="w-12 h-12 text-stone-200 mx-auto" />
-                      <p className="text-sm text-stone-400">이미지 생성에 실패했거나 생성 중입니다.</p>
-                    </div>
-                  )}
-                </div>
-
-                <div className="bg-stone-100/50 rounded-2xl p-4 space-y-2">
-                  <p className="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Image Generation Prompt</p>
-                  <p className="text-xs text-stone-500 italic leading-relaxed">
-                    {result.imagePrompt}
-                  </p>
                 </div>
               </div>
             </div>
